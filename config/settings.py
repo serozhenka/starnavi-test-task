@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     # internal apps
     'users.apps.UsersConfig',
+    'posts.apps.PostsConfig',
 
     # external apps
     'rest_framework',
