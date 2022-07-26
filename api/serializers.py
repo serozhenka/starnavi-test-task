@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from users.models import Account
-from posts.models import Post
+from posts.models import Post, PostLike
 
 class RegisterSerializer(serializers.ModelSerializer):
 
@@ -62,7 +62,22 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user', 'body']
+        fields = ['id', 'user', 'body', 'likes_count', 'created', 'edited_timestamp']
+        read_only_fields = ['id', 'edited_timestamp']
+
+    def create(self, validated_data):
+        return Post.objects.create(
+            user=self.context.get('request').user,
+            body=validated_data['body'],
+        )
+
+class PostLikeSerializer(serializers.ModelSerializer):
+
+    user = SimpleAccountSerializer(read_only=True)
+
+    class Meta:
+        model = PostLike
+        fields = ['id', 'user', 'post', 'timestamp']
         read_only_fields = ['id']
 
     def create(self, validated_data):

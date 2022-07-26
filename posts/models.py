@@ -11,6 +11,13 @@ class Post(models.Model):
     def __str__(self):
         return str(self.pk)
 
+    class Meta:
+        ordering = ['-created']
+
+    @property
+    def likes_count(self):
+        return self.postlike_set.filter(is_liked=True).count()
+
     def like(self, user):
         post_like, _ = PostLike.objects.get_or_create(user=user, post=self)
 
@@ -31,4 +38,7 @@ class PostLike(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     is_liked = models.BooleanField(default=True)
     timestamp = models.DateTimeField(blank=True, default=datetime.now())
+
+    class Meta:
+        ordering = ['-timestamp']
 
