@@ -6,17 +6,17 @@ from users.models import Account
 from posts.models import Post, PostLike
 
 class RegisterSerializer(serializers.ModelSerializer):
+    """Serializer used to register a new user."""
 
     password = serializers.CharField(
         write_only=True, required=True,
-        validators=[validate_password], style={'input_type': 'password'}
+        validators=[validate_password], style={'input_type': 'password'},
     )
     password2 = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
     class Meta:
         model = Account
         fields = ['email', 'username', 'password', 'password2']
-        # extra_kwargs = {'write_only_fields'}
 
     def create(self, validated_data):
         return Account.objects.create_user(
@@ -32,16 +32,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
+    """Serializer used to login user."""
 
     email = serializers.EmailField(write_only=True, required=True)
     password = serializers.CharField(
-        write_only=True, required=True,
-        validators=[validate_password], style={'input_type': 'password'}
+        write_only=True, required=True, style={'input_type': 'password'},
     )
 
     def validate(self, data):
-        email = data.get('email')
-        password = data.get('password')
+        email, password = data.get('email'), data.get('password')
 
         user = authenticate(request=self.context.get('request'), email=email, password=password)
         if not user:
@@ -51,12 +50,14 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 class SimpleAccountSerializer(serializers.ModelSerializer):
+    """Basic account serializer that returns non-private / common fields."""
 
     class Meta:
         model = Account
         fields = ['username']
 
 class PostSerializer(serializers.ModelSerializer):
+    """Post serializer."""
 
     user = SimpleAccountSerializer(read_only=True)
 
@@ -72,13 +73,13 @@ class PostSerializer(serializers.ModelSerializer):
         )
 
 class PostLikeSerializer(serializers.ModelSerializer):
+    """Post like serializer."""
 
     user = SimpleAccountSerializer(read_only=True)
 
     class Meta:
         model = PostLike
         fields = ['id', 'user', 'post', 'timestamp']
-        read_only_fields = ['id']
 
     def create(self, validated_data):
         return Post.objects.create(

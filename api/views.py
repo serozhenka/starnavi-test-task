@@ -1,6 +1,7 @@
 import pytz
 
 from datetime import datetime
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, views, response, status, pagination
 from rest_framework.response import Response
@@ -13,34 +14,16 @@ from users.models import Account
 
 
 class RegisterApiView(generics.CreateAPIView):
+
     queryset = Account.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
 
 
 class LoginApiView(views.APIView):
+
     queryset = Account.objects.all()
     permission_classes = [permissions.AllowAny]
-    serializer_class = LoginSerializer
-
-    def post(self, request, format=None):
-        serializer = LoginSerializer(data=self.request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-
-        user = serializer.validated_data['user']
-        login(request, user)
-
-        return Response(None, status=status.HTTP_200_OK)
-
-class LogoutApiView(views.APIView):
-
-    def get(self, request, *args, **kwargs):
-        logout(request)
-        return Response(None, status=status.HTTP_200_OK)
-
-
-class PostCreateApiView(generics.CreateAPIView):
-    queryset = Post.objects.all()
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
@@ -50,15 +33,36 @@ class PostCreateApiView(generics.CreateAPIView):
         user = serializer.validated_data['user']
         login(request, user)
 
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response([], status=status.HTTP_200_OK)
+
+class LogoutApiView(views.APIView):
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return Response([], status=status.HTTP_200_OK)
 
 
-class PostApiView(generics.ListCreateAPIView):
-    queryset = Account.objects.all()
-    lookup_field = 'pk'
-    serializer_class = PostSerializer
+# class PostCreateApiView(generics.CreateAPIView):
+#
+#     queryset = Post.objects.all()
+#     serializer_class = LoginSerializer
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = PostSerializer(data=self.request.data, context={'request': request})
+#         serializer.is_valid(raise_exception=True)
+#
+#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+#
+#
+# class PostApiView(generics.ListCreateAPIView):
+#
+#     queryset = Account.objects.all()
+#     serializer_class = PostSerializer
+#     lookup_field = 'pk'
+
 
 class PostLikesView(generics.ListAPIView):
+
     serializer_class = PostLikeSerializer
 
     def get_queryset(self):
@@ -73,7 +77,7 @@ class PostLikeApiView(views.APIView):
         pk = kwargs.get('pk')
         post = get_object_or_404(Post.objects.all(), pk=pk)
         post.like(request.user)
-        return Response(None, status=status.HTTP_200_OK)
+        return Response([], status=status.HTTP_200_OK)
 
 
 class PostUnlikeApiView(views.APIView):
@@ -82,9 +86,11 @@ class PostUnlikeApiView(views.APIView):
         pk = kwargs.get('pk')
         post = get_object_or_404(Post.objects.all(), pk=pk)
         post.unlike(request.user)
-        return Response(None, status=status.HTTP_200_OK)
+        return Response([], status=status.HTTP_200_OK)
+
 
 class PostLikesAnalyticsApiView(generics.ListAPIView):
+
     serializer_class = PostLikeSerializer
 
     def get_queryset(self):
@@ -104,8 +110,19 @@ class PostLikesAnalyticsApiView(generics.ListAPIView):
         date_from = date_from.replace(tzinfo=pytz.UTC)
         date_to = date_to.replace(tzinfo=pytz.UTC)
 
-        post_likes = PostLike.objects.filter(is_liked=True, timestamp__gte=date_from, timestamp__lt=date_to)
+        post_likes = PostLike.objects.filter(
+            is_liked=True,
+            timestamp__gte=date_from,
+            timestamp__lt=date_to,
+        ).extra(
+            select={'day': 'date( timestamp )'}
+        ).values('day').annotate(likes_count=Count('timestamp')).order_by('-day')
+
         return post_likes
+
+    def list(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        return Response(list(qs))
 
 class UserActivityApiView(views.APIView):
 

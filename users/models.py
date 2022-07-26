@@ -3,8 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 
 
 class AccountManager(BaseUserManager):
-    def create_user(self, email, username, password, **kwargs):
 
+    def create_user(self, email, username, password, **kwargs):
         if not email:
             raise ValueError('User should have valid email address')
         if not username:
@@ -28,6 +28,7 @@ class AccountManager(BaseUserManager):
 
 
 class Account(AbstractBaseUser, PermissionsMixin):
+
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=64, unique=True, db_index=True)
     created = models.DateTimeField(auto_now_add=True)

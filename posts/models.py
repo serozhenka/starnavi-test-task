@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 
 class Post(models.Model):
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     body = models.TextField(max_length=512, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -34,6 +35,7 @@ class Post(models.Model):
 
 
 class PostLike(models.Model):
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     is_liked = models.BooleanField(default=True)
