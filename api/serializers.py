@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from users.models import Account
+from posts.models import Post
 
 class RegisterSerializer(serializers.ModelSerializer):
 
@@ -48,3 +49,24 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+
+class SimpleAccountSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Account
+        fields = ['username']
+
+class PostSerializer(serializers.ModelSerializer):
+
+    user = SimpleAccountSerializer(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'user', 'body']
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        return Post.objects.create(
+            user=self.context.get('request').user,
+            body=validated_data['body'],
+        )

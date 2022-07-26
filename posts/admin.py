@@ -8,7 +8,7 @@ class PostAdmin(admin.ModelAdmin):
 
 
 class PostLikeAdmin(admin.ModelAdmin):
-    list_display = ('post', 'post_user', 'user', 'is_liked')
+    list_display = ('post', 'post_user', 'user', 'is_liked', 'timestamp')
     search_fields = ('user__username', 'user__email', 'post__user__username', 'post__user__email')
 
     def post_user(self, obj):
